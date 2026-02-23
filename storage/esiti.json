@@ -1,0 +1,152 @@
+{
+    "generated_at": "2026-02-23T08:28:18+00:00",
+    "results": {
+        "q1": [
+            {
+                "pnome": "Bullone"
+            },
+            {
+                "pnome": "Dado"
+            },
+            {
+                "pnome": "Distanziale"
+            },
+            {
+                "pnome": "Molla"
+            },
+            {
+                "pnome": "Rondella"
+            },
+            {
+                "pnome": "Vite"
+            }
+        ],
+        "q2": [
+            {
+                "fnome": "Acme"
+            }
+        ],
+        "q3": [
+            {
+                "fnome": "Acme"
+            },
+            {
+                "fnome": "Delta"
+            },
+            {
+                "fnome": "Gamma"
+            }
+        ],
+        "q4": [
+            {
+                "pnome": "Distanziale"
+            }
+        ],
+        "q5": [
+            {
+                "fid": "F1"
+            },
+            {
+                "fid": "F2"
+            },
+            {
+                "fid": "F3"
+            },
+            {
+                "fid": "F4"
+            }
+        ],
+        "q6": [
+            {
+                "pid": "P1",
+                "pnome": "Bullone",
+                "fnome": "Delta",
+                "costo": 13
+            },
+            {
+                "pid": "P2",
+                "pnome": "Vite",
+                "fnome": "Delta",
+                "costo": 17
+            },
+            {
+                "pid": "P3",
+                "pnome": "Dado",
+                "fnome": "Delta",
+                "costo": 23
+            },
+            {
+                "pid": "P4",
+                "pnome": "Rondella",
+                "fnome": "Delta",
+                "costo": 19
+            },
+            {
+                "pid": "P5",
+                "pnome": "Molla",
+                "fnome": "Delta",
+                "costo": 21
+            },
+            {
+                "pid": "P6",
+                "pnome": "Distanziale",
+                "fnome": "Acme",
+                "costo": 25
+            }
+        ],
+        "q7": [
+            {
+                "fid": "F3"
+            }
+        ],
+        "q8": [
+            {
+                "fid": "F1"
+            },
+            {
+                "fid": "F2"
+            },
+            {
+                "fid": "F4"
+            }
+        ],
+        "q9": [
+            {
+                "fid": "F1"
+            },
+            {
+                "fid": "F2"
+            },
+            {
+                "fid": "F3"
+            },
+            {
+                "fid": "F4"
+            }
+        ],
+        "q10": [
+            {
+                "pid": "P1"
+            },
+            {
+                "pid": "P2"
+            },
+            {
+                "pid": "P3"
+            },
+            {
+                "pid": "P4"
+            },
+            {
+                "pid": "P5"
+            }
+        ]
+    },
+    "parameters": {
+        "colore": "rosso",
+        "fornitore": "Acme",
+        "colore1": "rosso",
+        "colore2": "verde",
+        "min_fornitori": 2
+    }
+}

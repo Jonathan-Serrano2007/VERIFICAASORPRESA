@@ -94,16 +94,30 @@ Esecuzione:
 composer test
 ```
 
-## 6) Eseguire tutti gli esercizi da terminale
+## 6) Visualizzare gli esiti via web
 
-Con server avviato:
+Con server avviato, apri nel browser:
+
+- `http://127.0.0.1:8080/` (apre `q1` in JSON)
+- `http://127.0.0.1:8080/q1` ... `http://127.0.0.1:8080/q10` (una query per pagina, JSON)
+- `http://127.0.0.1:8080/api/esiti` (tutte le query insieme, salva e restituisce JSON)
+
+Per esempio, per la query 2 basta aprire `http://127.0.0.1:8080/q2`.
+
+## 7) Esiti tramite API con salvataggio JSON
+
+Genera tutti gli esiti (Q1..Q10) via API e salva su file JSON:
 
 ```bash
-./run_all.sh
+curl -s "http://127.0.0.1:8080/api/esiti" | jq .
 ```
 
-Opzionale base URL custom:
+Legge il file JSON salvato:
 
 ```bash
-BASE_URL="http://127.0.0.1:8080" ./run_all.sh
+curl -s "http://127.0.0.1:8080/api/esiti/saved" | jq .
 ```
+
+Path default file JSON salvato: `storage/esiti.json`.
+
+Opzionale: puoi cambiare il path con variabile ambiente `RESULTS_JSON_PATH`.

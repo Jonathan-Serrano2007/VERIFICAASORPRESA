@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Esiti Esercizi SQL</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f7f7f9; color: #222; }
+    h1 { margin-bottom: 6px; }
+    p { margin-top: 0; color: #555; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+    .card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
+    .card h2 { margin: 0 0 8px; font-size: 16px; }
+    pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 13px; }
+    .loading { color: #666; }
+    .error { color: #a00; }
+    .toolbar { margin-bottom: 14px; }
+    button { padding: 8px 12px; border: 1px solid #bbb; border-radius: 6px; background: #fff; cursor: pointer; }
+    button:hover { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <h1>Esiti esercizi (Q1-Q10)</h1>
+  <p>La pagina richiama gli endpoint API e mostra le risposte JSON.</p>
+
+  <div class="toolbar">
+    <button id="refreshBtn" type="button">Ricarica risultati</button>
+  </div>
+
+  <div id="container" class="grid"></div>
+
+  <script>
+    const endpoints = [
+      { id: 1, path: '/api/q1', title: 'Q1 - pezzi con almeno un fornitore' },
+      { id: 2, path: '/api/q2', title: 'Q2 - fornitori che forniscono ogni pezzo' },
+      { id: 3, path: '/api/q3', title: 'Q3 - fornitori che forniscono tutti i pezzi rossi' },
+      { id: 4, path: '/api/q4', title: 'Q4 - pezzi forniti da Acme e nessun altro' },
+      { id: 5, path: '/api/q5', title: 'Q5 - fornitori sopra costo medio' },
+      { id: 6, path: '/api/q6', title: 'Q6 - fornitori con ricarico massimo per pezzo' },
+      { id: 7, path: '/api/q7', title: 'Q7 - fornitori che forniscono solo pezzi rossi' },
+      { id: 8, path: '/api/q8', title: 'Q8 - fornitori con un pezzo rosso e uno verde' },
+      { id: 9, path: '/api/q9', title: 'Q9 - fornitori con un pezzo rosso o verde' },
+      { id: 10, path: '/api/q10', title: 'Q10 - pezzi forniti da almeno 2 fornitori' }
+    ];
+
+    const container = document.getElementById('container');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    function buildCards() {
+      container.innerHTML = '';
+      for (const item of endpoints) {
+        const card = document.createElement('section');
+        card.className = 'card';
+        card.innerHTML = `
+          <h2>${item.title}</h2>
+          <pre id="out-${item.id}" class="loading">Caricamento...</pre>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    async function loadAll() {
+      buildCards();
+
+      for (const item of endpoints) {
+        const out = document.getElementById(`out-${item.id}`);
+        try {
+          const response = await fetch(item.path, { headers: { 'Accept': 'application/json' } });
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const payload = await response.json();
+          out.className = '';
+          out.textContent = JSON.stringify(payload, null, 2);
+        } catch (error) {
+          out.className = 'error';
+          out.textContent = `Errore su ${item.path}: ${error.message}`;
+        }
+      }
+    }
+
+    refreshBtn.addEventListener('click', loadAll);
+    loadAll();
+  </script>
+</body>
+</html>

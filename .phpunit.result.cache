@@ -1,1 +1,1 @@
-{"version":2,"defects":[],"times":{"Tests\\EndpointsTest::testQ1ReturnsJsonAndData":0.01}}
+{"version":2,"defects":[],"times":{"Tests\\EndpointsTest::testQ1ReturnsJsonAndData":0.01,"Tests\\EndpointsTest::testEsitiEndpointReturnsDataAndSavesJsonFile":0.003}}

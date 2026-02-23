@@ -85,6 +85,29 @@ function fetchRows(PDO $pdo, string $sql, array $params = [], ?array $pagination
     return $stmt->fetchAll();
 }
 
+function getResultsJsonPath(): string
+{
+    $configuredPath = getenv('RESULTS_JSON_PATH');
+    if (is_string($configuredPath) && $configuredPath !== '') {
+        return $configuredPath;
+    }
+
+    return __DIR__ . '/../storage/esiti.json';
+}
+
+function saveResultsToJson(array $payload): string
+{
+    $path = getResultsJsonPath();
+    $dir = dirname($path);
+
+    if (!is_dir($dir)) {
+        mkdir($dir, 0777, true);
+    }
+
+    file_put_contents($path, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    return $path;
+}
+
 function createApp(?PDO $pdo = null): App
 {
     $pdo ??= getPdoFromEnv();
@@ -92,6 +115,22 @@ function createApp(?PDO $pdo = null): App
     $app = AppFactory::create();
     $app->addRoutingMiddleware();
     $app->addErrorMiddleware(true, true, true);
+
+    $app->get('/', function (Request $request, Response $response): Response {
+        return $response->withHeader('Location', '/q1')->withStatus(302);
+    });
+
+    $app->get('/{queryId:q[1-9]|q10}', function (Request $request, Response $response, array $args): Response {
+        $queryId = (string) $args['queryId'];
+        $queryString = http_build_query($request->getQueryParams());
+        $location = '/api/' . $queryId;
+
+        if ($queryString !== '') {
+            $location .= '?' . $queryString;
+        }
+
+        return $response->withHeader('Location', $location)->withStatus(302);
+    });
 
     $app->get('/api/q1', function (Request $request, Response $response) use ($pdo): Response {
         $rows = fetchRows(
@@ -315,6 +354,199 @@ function createApp(?PDO $pdo = null): App
         );
 
         return jsonResponse($response, ['query' => 10, 'min_fornitori' => $minSuppliers, 'data' => $rows]);
+    });
+
+    $app->get('/api/esiti', function (Request $request, Response $response) use ($pdo): Response {
+        $q = $request->getQueryParams();
+        $colore = (string) ($q['colore'] ?? 'rosso');
+        $fornitore = (string) ($q['fornitore'] ?? 'Acme');
+        $colore1 = (string) ($q['colore1'] ?? 'rosso');
+        $colore2 = (string) ($q['colore2'] ?? 'verde');
+        $minFornitori = max(2, (int) ($q['min_fornitori'] ?? 2));
+
+        $payload = [
+            'generated_at' => gmdate('c'),
+            'results' => [
+                'q1' => fetchRows(
+                    $pdo,
+                    'SELECT DISTINCT p.pnome
+                     FROM Pezzi p
+                     JOIN Catalogo c ON c.pid = p.pid
+                     ORDER BY p.pnome'
+                ),
+                'q2' => fetchRows(
+                    $pdo,
+                    'SELECT f.fnome
+                     FROM Fornitori f
+                     WHERE NOT EXISTS (
+                         SELECT 1
+                         FROM Pezzi p
+                         WHERE NOT EXISTS (
+                             SELECT 1
+                             FROM Catalogo c
+                             WHERE c.fid = f.fid AND c.pid = p.pid
+                         )
+                     )
+                     ORDER BY f.fnome'
+                ),
+                'q3' => fetchRows(
+                    $pdo,
+                    'SELECT f.fnome
+                     FROM Fornitori f
+                     WHERE NOT EXISTS (
+                         SELECT 1
+                         FROM Pezzi p
+                         WHERE LOWER(p.colore) = LOWER(:colore)
+                           AND NOT EXISTS (
+                               SELECT 1
+                               FROM Catalogo c
+                               WHERE c.fid = f.fid AND c.pid = p.pid
+                           )
+                     )
+                     ORDER BY f.fnome',
+                    ['colore' => $colore]
+                ),
+                'q4' => fetchRows(
+                    $pdo,
+                    'SELECT DISTINCT p.pnome
+                     FROM Pezzi p
+                     WHERE EXISTS (
+                         SELECT 1
+                         FROM Catalogo c1
+                         JOIN Fornitori f1 ON f1.fid = c1.fid
+                         WHERE c1.pid = p.pid
+                           AND f1.fnome = :fornitore
+                     )
+                     AND NOT EXISTS (
+                         SELECT 1
+                         FROM Catalogo c2
+                         JOIN Fornitori f2 ON f2.fid = c2.fid
+                         WHERE c2.pid = p.pid
+                           AND f2.fnome <> :fornitore
+                     )
+                     ORDER BY p.pnome',
+                    ['fornitore' => $fornitore]
+                ),
+                'q5' => fetchRows(
+                    $pdo,
+                    'SELECT DISTINCT c.fid
+                     FROM Catalogo c
+                     JOIN (
+                         SELECT pid, AVG(costo) AS costo_medio
+                         FROM Catalogo
+                         GROUP BY pid
+                     ) avgp ON avgp.pid = c.pid
+                     WHERE c.costo > avgp.costo_medio
+                     ORDER BY c.fid'
+                ),
+                'q6' => fetchRows(
+                    $pdo,
+                    'SELECT p.pid, p.pnome, f.fnome, c.costo
+                     FROM Catalogo c
+                     JOIN (
+                         SELECT pid, MAX(costo) AS costo_max
+                         FROM Catalogo
+                         GROUP BY pid
+                     ) m ON m.pid = c.pid AND m.costo_max = c.costo
+                     JOIN Pezzi p ON p.pid = c.pid
+                     JOIN Fornitori f ON f.fid = c.fid
+                     ORDER BY p.pid, f.fnome'
+                ),
+                'q7' => fetchRows(
+                    $pdo,
+                    'SELECT f.fid
+                     FROM Fornitori f
+                     WHERE EXISTS (
+                         SELECT 1
+                         FROM Catalogo c
+                         WHERE c.fid = f.fid
+                     )
+                     AND NOT EXISTS (
+                         SELECT 1
+                         FROM Catalogo c
+                         JOIN Pezzi p ON p.pid = c.pid
+                         WHERE c.fid = f.fid
+                           AND LOWER(p.colore) <> LOWER(:colore)
+                     )
+                     ORDER BY f.fid',
+                    ['colore' => $colore]
+                ),
+                'q8' => fetchRows(
+                    $pdo,
+                    'SELECT f.fid
+                     FROM Fornitori f
+                     WHERE EXISTS (
+                         SELECT 1
+                         FROM Catalogo c
+                         JOIN Pezzi p ON p.pid = c.pid
+                         WHERE c.fid = f.fid
+                           AND LOWER(p.colore) = LOWER(:colore1)
+                     )
+                     AND EXISTS (
+                         SELECT 1
+                         FROM Catalogo c
+                         JOIN Pezzi p ON p.pid = c.pid
+                         WHERE c.fid = f.fid
+                           AND LOWER(p.colore) = LOWER(:colore2)
+                     )
+                     ORDER BY f.fid',
+                    ['colore1' => $colore1, 'colore2' => $colore2]
+                ),
+                'q9' => fetchRows(
+                    $pdo,
+                    'SELECT DISTINCT f.fid
+                     FROM Fornitori f
+                     JOIN Catalogo c ON c.fid = f.fid
+                     JOIN Pezzi p ON p.pid = c.pid
+                     WHERE LOWER(p.colore) IN (LOWER(:colore1), LOWER(:colore2))
+                     ORDER BY f.fid',
+                    ['colore1' => $colore1, 'colore2' => $colore2]
+                ),
+                'q10' => fetchRows(
+                    $pdo,
+                    'SELECT c.pid
+                     FROM Catalogo c
+                     GROUP BY c.pid
+                     HAVING COUNT(DISTINCT c.fid) >= :min_fornitori
+                     ORDER BY c.pid',
+                    ['min_fornitori' => $minFornitori]
+                ),
+            ],
+            'parameters' => [
+                'colore' => $colore,
+                'fornitore' => $fornitore,
+                'colore1' => $colore1,
+                'colore2' => $colore2,
+                'min_fornitori' => $minFornitori,
+            ],
+        ];
+
+        $savedPath = saveResultsToJson($payload);
+
+        return jsonResponse($response, [
+            'message' => 'Esiti generati e salvati su file JSON',
+            'saved_to' => $savedPath,
+            'data' => $payload,
+        ]);
+    });
+
+    $app->get('/api/esiti/saved', function (Request $request, Response $response): Response {
+        $path = getResultsJsonPath();
+
+        if (!file_exists($path)) {
+            return jsonResponse($response, [
+                'message' => 'File JSON non ancora generato',
+                'path' => $path,
+            ], 404);
+        }
+
+        $content = file_get_contents($path);
+        $decoded = json_decode($content, true);
+
+        return jsonResponse($response, [
+            'path' => $path,
+            'data' => $decoded,
+        ]);
     });
 
     $app->get('/health', function (Request $request, Response $response): Response {

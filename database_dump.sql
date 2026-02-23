@@ -36,18 +36,22 @@ INSERT INTO Pezzi (pid, pnome, colore) VALUES
 ('P2', 'Vite', 'verde'),
 ('P3', 'Dado', 'rosso'),
 ('P4', 'Rondella', 'blu'),
-('P5', 'Molla', 'verde');
+('P5', 'Molla', 'verde'),
+('P6', 'Distanziale', 'nero');
 
 INSERT INTO Catalogo (fid, pid, costo) VALUES
 ('F1', 'P1', 10.0),
 ('F1', 'P2', 15.0),
 ('F1', 'P3', 20.0),
+('F1', 'P4', 18.0),
+('F1', 'P5', 19.0),
+('F1', 'P6', 25.0),
 ('F2', 'P1', 12.0),
 ('F2', 'P2', 14.0),
 ('F2', 'P4', 16.0),
+('F3', 'P1', 11.0),
 ('F3', 'P3', 22.0),
-('F3', 'P5', 18.0),
-('F4', 'P1', 11.0),
+('F4', 'P1', 13.0),
 ('F4', 'P2', 17.0),
 ('F4', 'P3', 23.0),
 ('F4', 'P4', 19.0),
